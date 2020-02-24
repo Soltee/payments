@@ -15,14 +15,15 @@ class CreateOrdersTable extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('payment_id');
+            $table->string('payment_id')->nullable();
             $table->enum('payment_method', ['cash_on_delivery', 'paypal','stripe','card'])->default('cash_on_delivery');            
             $table->string('payment_email');
             $table->string('payment_name');
-            $table->float('discount');
+            $table->float('discount')->nullable();
             $table->float('total');
             $table->enum('currency', ['usd', 'rs','eu'])->default('usd');            
-            $table->enum('status', ['pending','processing','completed','decline'])->default('pending');            
+            $table->enum('status', ['pending','processing','completed','decline'])->default('pending'); 
+            $table->boolean('subscription')->default('false');           
             $table->timestamps();
         });
     }
