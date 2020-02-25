@@ -16,4 +16,8 @@ class WelcomeController extends Controller
     	// dd(count($subscriptions));
     	return view('welcome', compact('subscriptions', 'once', 'orders'));
     }
+
+    public function auth(){
+    	return response()->json(['auth' => auth()->user()]);
+    }
 }

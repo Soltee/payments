@@ -2,7 +2,8 @@
 
 
 @section('extra-scripts')
-	    <script src="https://js.stripe.com/v3/"></script>
+    <script src="https://khalti.com/static/khalti-checkout.js"></script>
+	<script src="https://js.stripe.com/v3/"></script>
 @endsection
 @section('extra-css')
 	<style type="text/css">
@@ -42,17 +43,17 @@
 
 @section('content')
 
-    <div class=" overflow-hidden bg-gray-500	 h-screen ">
+    <div class="bg-gray-800 ">
 
-        <div class="my-8 p-4  bg-gray-800 rounded">
+        <div class="  rounded">
         	<div class="flex justify-center items-center">
         		<h3 class="text-md font-medium text-white">Choose Payment Method</h3>
 
         	</div>
-        	<form id="payment-form" method="POST" action="{{ route('checkout.store') }}" class=" mt-10 mb-3 w-full">
+        	<form id="payment-form" method="POST" action="{{ route('checkout.store') }}" class="  w-full">
         		@csrf
 	        	<div class="" x-data="{ tab: 'none' }" >
-	        		<div class="flex flex-col">	
+	        		<div class="flex flex-row justify-around items-center">	
 		        		<input type="hidden" name="type" value="{{ $type }}">
 		        		@if($type == 'once')
 			        		<div @click="tab = 'none'" class="method flex items-center">
@@ -73,23 +74,25 @@
 						</div>
 						@endif
 
-						<div class="method flex flex-row items-center">
-						<label class="py-4 px-4 px-4 py-4 bg-gray-900 rounded-lg ml-3 group border-2  border-transparent hover:border-green-600 active:border-green-600">
-						  	
-						    <input type="checkbox" class="" name="payment_method" value="paypal" id="option2"> 
-						   	<span class=" ml-2 text-bold font-semibold text-white">Paypal</span>
+		        		@if($type == 'subscription' ||  auth()->user())
+							<div class="method flex flex-row items-center">
+							<label class="py-4 px-4 px-4 py-4 bg-gray-900 rounded-lg ml-3 group border-2  border-transparent hover:border-green-600 active:border-green-600">
+							  	
+							    <input type="checkbox" class="" name="payment_method" value="paypal" id="option2"> 
+							   	<span class=" ml-2 text-bold font-semibold text-white">Paypal</span>
 
-						</label>
-						</div>
+							</label>
+							</div>
 
-						<div @click="tab = 'stripe'" class="method flex flex-row items-center">
-						<label class="py-4 px-4 px-4 py-4 bg-gray-900 rounded-lg ml-3 group border-2  border-transparent hover:border-green-600 active:border-green-600">
-						  	
-						    <input type="checkbox" class="" name="payment_method" value="stripe" id="option2"> 
-						   	<span class=" ml-2 text-bold font-semibold text-white">Stripe</span>
+							<div @click="tab = 'stripe'" class="method flex flex-row items-center">
+							<label class="py-4 px-4 px-4 py-4 bg-gray-900 rounded-lg ml-3 group border-2  border-transparent hover:border-green-600 active:border-green-600">
+							  	
+							    <input type="checkbox" id="stripe" class="" name="payment_method" value="stripe" id="option2"> 
+							   	<span class=" ml-2 text-bold font-semibold text-white">Stripe</span>
 
-						</label>
-						</div>
+							</label>
+							</div>
+						@endif
 					</div>
 					<div x-show="tab === 'stripe'" class="my-4 flex flex-col items-center w-full">
 							<label for="card-element" class="mb-4 py-2  font-bold text-lg">
@@ -114,11 +117,79 @@
 
 @endsection
 
-@section('scripts')
+	{{--@section('scripts')
 
-	<script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.0.1/dist/alpine.js" ></script>
+ 	<script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.0.1/dist/alpine.js" ></script>
 	<script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.0.1/dist/alpine-ie11.js"></script>
 	<script>
+		let stripeCheckbox = document.getElementById('stripe');
+		var form = document.getElementById('payment-form');
+		// const total = 10 * 100;
+	 //    var config = {
+	 //        // replace the publicKey with yours
+	 //        "publicKey": "<?php echo env('KHALTI_PUBLIC_KEY'); ?>",
+	 //        "productIdentity": "1234567890",
+	 //        "productName": "Dragon",
+	 //        "productUrl": "http://gameofthrones.wikia.com/wiki/Dragons",
+	 //        "eventHandler": {
+	 //            onSuccess (payload) {
+	 //            	// request options
+	 //            	// let input = document.createElement('input');
+	 //            	// input.value = payload.token;
+		// 			const options = {
+		// 			    method: 'POST',
+		// 			    body: JSON.stringify(payload),
+		// 			    headers: {
+		// 			        'Content-Type': 'application/json',
+		// 			        "Accept": "application/json",
+	 //        				"X-Requested-With": "XMLHttpRequest",
+	 //        				"X-CSRF-Token": document.head.querySelector('meta[name="csrf-token"]').content
+		// 			    }
+		// 			}
+	 //                // hit merchant api for initiating verfication
+	 //                fetch('/checkout', options)
+		// 		    .then(res => res.json())
+		// 		    .then(res => {
+		// 		    	console.log(res);
+		// 		    	if(res.status == 200){
+		// 		    		console.log('Payment Successful.');
+		// 		    	}
+		// 		    })
+		// 		    .catch((error) => {
+		// 		    	console.log('Error!');
+		// 		    });
+	 //                // console.log(payload);
+	 //            },
+	 //            onError (error) {
+	 //                console.log(error);
+	 //            },
+	 //            onClose () {
+	 //                console.log('widget is closing');
+	 //            }
+	 //        }
+	 //    };
+
+	 //    var checkout = new KhaltiCheckout(config);
+	 //    // console.log(total);
+	 //    KhaltiBtn.onclick = function () {
+	 //        checkout.show({amount: total});
+	 //    }
+
+		if(stripeCheckbox.checked){
+			if('<?php echo $type = "subscription"; ?>'){
+				alert('Yes');
+				let intentToken = '';
+				axios.get('/api/v1/user/setup-intent')
+		        .then( ( response ) => {
+		      //   	var hiddenInput = document.createElement('input');
+				    // hiddenInput.setAttribute('type', 'hidden');
+				    // hiddenInput.setAttribute('name', 'stripeToken');
+				    // hiddenInput.setAttribute('value', token.id);
+		            intentToken = response.data;
+	       	 	});
+			}
+			
+
 		// Create a Stripe client.
 			var stripe = Stripe('<?php echo env('STRIPE_PUBLISHABLE_KEY'); ?>');
 			  
@@ -150,7 +221,6 @@
 			});
   
 		// Handle form submission.
-		var form = document.getElementById('payment-form');
 		form.addEventListener('submit', function(event) {
 		    event.preventDefault();
 		  
@@ -179,5 +249,6 @@
 		    // Submit the form
 		    form.submit();
 		}
+	}
 	</script>
-@endsection
+@endsection --}}

@@ -10,8 +10,7 @@
     <title>{{ config('app.name') }}</title>
 
     <!-- Styles -->
-    <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
-    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    <link href="{{ mix('css/app.css') }}" rel="stylesheet">
 
     @yield('extra-scripts')
     @yield('extra-css')
@@ -19,21 +18,46 @@
 </head>
 <body class="bg-gray-100 h-screen antialiased leading-none text-lg">
     <div id="app"  class="">
-        <nav>
+         <nav class="bg-blue-900 shadow  py-6">
+            <div class="container mx-auto px-6 md:px-0">
+                <div class="flex items-center justify-center">
+                    <div class="mr-6">
+                        <a href="{{ url('/') }}" class="text-lg font-semibold text-gray-100 no-underline">
+                            {{ config('app.name', 'Laravel') }}
+                        </a>
+                    </div>
+                    <div class="flex-1 text-right">
+                        @guest
+                            <a class="no-underline hover:underline text-gray-300 text-sm p-3" href="{{ route('login') }}">{{ __('Login') }}</a>
+                            @if (Route::has('register'))
+                                <a class="no-underline hover:underline text-gray-300 text-sm p-3" href="{{ route('register') }}">{{ __('Register') }}</a>
+                            @endif
+                        @else
+                            <span class="text-gray-300 text-sm pr-4">{{ Auth::user()->name }}</span>
+
+                            <a href="{{ route('logout') }}"
+                               class="no-underline hover:underline text-gray-300 text-sm p-3"
+                               onclick="event.preventDefault();
+                                    document.getElementById('logout-form').submit();">{{ __('Logout') }}</a>
+                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
+                                {{ csrf_field() }}
+                            </form>
+                        @endguest
+                    </div>
+                </div>
+            </div>
         </nav>
 
-{{--         @include('sweetalert::alert')
- --}}   
-      <main class="container-sm">
+        @include('sweetalert::alert')
+   
+      <main class="">
         @yield('content')
       </main>
 
     </div>
 
     <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-    <script src="{{ asset('js/app.js') }}"></script>
+    <script src="{{ mix('js/app.js') }}"></script>
     @yield('scripts')
 
 </body>
