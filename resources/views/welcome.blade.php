@@ -41,6 +41,6 @@
 @endsection
 @section('content')
 
-   <charge-payments></charge-payments>
+   <charge-payments auth="{{ auth()->user() }}"></charge-payments>
 
 @endsection

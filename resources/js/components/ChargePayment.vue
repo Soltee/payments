@@ -18,7 +18,7 @@
 								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6  group-hover:text-green-600"  :class="(paymentType == 'once') ? 'text-green-600 transition-all duration-150 ease-in-out' : 'text-gray-900 '"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
                     			
                     		</div>
-                    		<div @click="paymentType = 'subscription'; paymentTypeStatus=true;" class="border-2  flex flex-col items-center group hover:border-green-600  px-3 py-3 rounded-lg cursor-pointer transition-all duration-150 ease-in-out" :class="(paymentType == 'subscription') ? 'border-green-600 transition-all duration-150 ease-in-out' : ''">
+                    		<div @click="paymentType = 'oncesubscription'; paymentTypeStatus=true;" class="border-2  flex flex-col items-center group hover:border-green-600  px-3 py-3 rounded-lg cursor-pointer transition-all duration-150 ease-in-out" :class="(paymentType == 'subscription') ? 'border-green-600 transition-all duration-150 ease-in-out' : ''">
                           		<span class="font-semibold text-gray-700 mb-2">Subscription</span>                    		
 
 								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 group-hover:text-green-600"  :class="(paymentType == 'subscription') ? 'text-green-600 transition-all duration-150 ease-in-out' : 'text-gray-900 '"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
@@ -27,9 +27,11 @@
                     	</div>
                     </div>
 
-                    <form v-else class="w-full p-6 transition-all duration-150 ease-in-out" method="POST" action="">
+                    <form v-else @submit.prevent="submitPaymentMethod()" class="w-full p-6 transition-all duration-150 ease-in-out" method="POST" action="">
                     	<div class="flex flex-col ">
 		        		<input type="hidden" name="pType" :value="paymentType">
+		        		<div v-if="paymentType == 'once'">
+		        			
                     		<div class="flex items-center mn-6">
                     			<svg @click="paymentType = ''; paymentTypeStatus=false;" class="h-6 w-6 text-blue-800 mr-3" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><polygon points="3.828 9 9.899 2.929 8.485 1.515 0 10 .707 10.707 8.485 18.485 9.899 17.071 3.828 11 20 11 20 9 3.828 9"/></svg>
                     			<p class="text-gray-800 font-medium py-3">Customer information</p>
@@ -72,9 +74,11 @@
 			                      </div>
 			                    </div>
 			                  </div>
+		        		</div>
+
 						    <p class="my-4 text-gray-800 font-medium py-3">Payment methods</p>
 
-						    <div class="flex items-center justify-between flex-wrap">
+						    <div class="flex items-center justify-around flex-wrap">
 						    	<div v-if="paymentType == 'once'" class="flex items-center justify-between">
 						    		
 							    	<div @click="paymentMethod = 'cash'" class="flex flex-col items-center px-4 py-4 rounded-lg  group border-2 border-gray-500 mr-3 hover:border-green-600 ">
@@ -97,25 +101,30 @@
 									<span class=" ml-2 mb-3 font-semibold text-gray-700">Paypal</span>
 									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 group-hover:text-green-600"  :class="(paymentMethod == 'paypal') ? 'text-green-600 transition-all duration-150 ease-in-out' : 'text-gray-900 '"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
 								</div>
-								<div @click="paymentMethod = 'stripe'" class="flex flex-col items-center px-4 py-4 rounded-lg  group border-2 border-gray-500  hover:border-green-600 ">
+								<div @click="paymentMethod = 'stripe'; loadIntent();" class="flex flex-col items-center px-4 py-4 rounded-lg  group border-2 border-gray-500  hover:border-green-600 ">
 									<input type="checkbox" class="hidden" name="payment_method" value="stripe" id="option1"> 
 									<span class=" ml-2 mb-3 font-semibold text-gray-700">Stripe</span>
 									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 group-hover:text-green-600"  :class="(paymentMethod == 'stripe') ? 'text-green-600 transition-all duration-150 ease-in-out' : 'text-gray-900 '"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
 								</div>
 						    </div>
 
+                    	</div>
+
+                    	<div class="my-6" v-if="paymentMethod == 'stripe'">
+                    		<div class="flex flex-col mb-3">
+	                    		<label>Card Holder Name</label>
+						        <input id="card-holder-name" type="text" v-model="name" class="px-3 py-3 rounded-lg mb-2 w-full">
+						    </div>
+                    		<div class="flex flex-col ">
+						        <label>Card</label>
+						        <div id="card-element"></div>
+						    </div>
                     	</div>	
-                        <!-- 
+                      
+                        <button type="submit" class=" my-3 bg-gray-800 hover:bg-gray-700 text-gray-100 font-bold py-3 px-4 rounded focus:outline-none focus:shadow-outline">
+                                Subscribe
+                        </button>
 
-     
-                        <div class="flex flex-wrap items-center">
-                            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-gray-100 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                                Login
-                            </button>
-
-                            
-
-                        </div> -->
                     </form>
 
                 </div>
@@ -127,33 +136,97 @@
 	export default {
 		name : 'charge-payments',
 		props : {
-			
+			auth : {
+				required : false,
+				default  : {}
+			}
 		},
 		data(){
 			return {
-				auth              : null,
 				paymentType       : '',
 				paymentTypeStatus :false,
 				paymentMethod     : '',
-                csrf              : document.head.querySelector('meta[name="csrf-token"]').content			
+                csrf              : document.head.querySelector('meta[name="csrf-token"]').content,
+                intentToken       : '',
+                name               : '',
+                addPaymentStatus   :    0,
+                addPaymentStatusError  :   '',
+                stripe     : '',
+		        elements   : '',
+		        card       : '',
+		        paymentMethods : []			
             }
 		},
 		mounted(){
-			this.paymentType = '';
-			this.getAuthUser();
 		},
 		methods: {
-			getAuthUser(){
-				axios.get('/api/v1/user')
-				.then(res => {
-					if (res.status == 200) {
-						this.auth = res.data.user;
-					} 
-				}).
-				catch(err => {
-					console.log(err.response.data);
-				})
-			}
+			loadIntent(){
+			    axios.get('/user/setup-intent')
+			        .then( ( response ) => {
+			            this.intentToken = response.data.intent;
+			        });
+
+			    let key = process.env.MIX_STRIPE_APP_KEY;
+
+			    setTimeout(() => {
+					this.stripe = Stripe(`${key}`);
+
+				    this.elements = this.stripe.elements();
+				    if(this.paymentMethod == 'stripe'){
+				    	this.card = this.elements.create('card');
+				    	this.card.mount('#card-element');
+				    }
+			    }, 500);
+			    
+			    
+
+			},
+			submitPaymentMethod(){
+
+	           this.addPaymentStatus = 1;
+
+			    this.stripe.confirmCardSetup(
+			        this.intentToken.client_secret, {
+			            payment_method: {
+			                card: this.card,
+			                billing_details: {
+			                    name: this.name
+			                }
+			            }
+			        }
+			    ).then(function(result) {
+			        if (result.error) {
+			            this.addPaymentStatus = 3;
+			            this.addPaymentStatusError = result.error.message;
+			        } else {
+			            this.savePaymentMethod( result.setupIntent.payment_method );
+			            this.addPaymentStatus = 2;
+			            this.card.clear();
+			            this.name = '';
+			        }
+			    }.bind(this));
+
+			},
+			savePaymentMethod(method)
+			{
+				axios.post('/user/payments', {
+					method : method
+				}).then(res => {
+					// if(status == 200)
+					// {
+					// 	alert('successful.');
+					// }
+					this.loadPaymentMethods();
+				});
+			},
+			loadPaymentMethods(){
+			    axios.get('/api/v1/user/payment-methods')
+			        .then( function( response ){
+			            this.paymentMethods = response.data;
+			        }.bind(this));
+			},
+
+
 		}
 	};	
 </script>

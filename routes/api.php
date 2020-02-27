@@ -17,7 +17,7 @@ use Illuminate\Http\Request;
 	//     return $request->user();
 	// });
 
-Route::group(['prefix' => 'v1', 'middleware' => 'auth:api'], function(){
-	Route::get('/user', 'WelcomeController@auth');
+Route::group(['prefix' => 'v1'], function(){
+	// Route::get('/user', 'WelcomeController@auth');
 	Route::get('/user/setup-intent', 'StripeController@create');
 });

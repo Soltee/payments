@@ -12,6 +12,9 @@
 */
 Auth::routes();
 Route::get('/', 'WelcomeController@index')->name('welcome');
+Route::get('/user/setup-intent', 'StripeController@create');
+Route::get('/user/payment-methods', 'StripeController@getPaymentMethods');
+Route::post('/user/payments', 'StripeController@create');
 
 Route::get('/checkout', 'CheckoutController@index')->name('checkout');
 Route::post('/checkout', 'CheckoutController@store')->name('checkout.store');

@@ -1908,6 +1908,15 @@ module.exports = {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* WEBPACK VAR INJECTION */(function(process) {//
+//
+//
+//
+//
+//
+//
+//
+//
 //
 //
 //
@@ -2035,34 +2044,90 @@ __webpack_require__.r(__webpack_exports__);
 //
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: 'charge-payments',
-  props: {},
+  props: {
+    auth: {
+      required: false,
+      "default": {}
+    }
+  },
   data: function data() {
     return {
-      auth: null,
       paymentType: '',
       paymentTypeStatus: false,
       paymentMethod: '',
-      csrf: document.head.querySelector('meta[name="csrf-token"]').content
+      csrf: document.head.querySelector('meta[name="csrf-token"]').content,
+      intentToken: '',
+      name: '',
+      addPaymentStatus: 0,
+      addPaymentStatusError: '',
+      stripe: '',
+      elements: '',
+      card: '',
+      paymentMethods: []
     };
   },
-  mounted: function mounted() {
-    this.paymentType = '';
-    this.getAuthUser();
-  },
+  mounted: function mounted() {},
   methods: {
-    getAuthUser: function getAuthUser() {
+    loadIntent: function loadIntent() {
       var _this = this;
 
-      axios.get('/api/v1/user').then(function (res) {
-        if (res.status == 200) {
-          _this.auth = res.data.user;
-        }
-      })["catch"](function (err) {
-        console.log(err.response.data);
+      axios.get('/user/setup-intent').then(function (response) {
+        _this.intentToken = response.data.intent;
       });
+      var key = process.env.MIX_STRIPE_APP_KEY;
+      setTimeout(function () {
+        _this.stripe = Stripe("".concat(key));
+        _this.elements = _this.stripe.elements();
+
+        if (_this.paymentMethod == 'stripe') {
+          _this.card = _this.elements.create('card');
+
+          _this.card.mount('#card-element');
+        }
+      }, 500);
+    },
+    submitPaymentMethod: function submitPaymentMethod() {
+      this.addPaymentStatus = 1;
+      this.stripe.confirmCardSetup(this.intentToken.client_secret, {
+        payment_method: {
+          card: this.card,
+          billing_details: {
+            name: this.name
+          }
+        }
+      }).then(function (result) {
+        if (result.error) {
+          this.addPaymentStatus = 3;
+          this.addPaymentStatusError = result.error.message;
+        } else {
+          this.savePaymentMethod(result.setupIntent.payment_method);
+          this.addPaymentStatus = 2;
+          this.card.clear();
+          this.name = '';
+        }
+      }.bind(this));
+    },
+    savePaymentMethod: function savePaymentMethod(method) {
+      var _this2 = this;
+
+      axios.post('/user/payments', {
+        method: method
+      }).then(function (res) {
+        // if(status == 200)
+        // {
+        // 	alert('successful.');
+        // }
+        _this2.loadPaymentMethods();
+      });
+    },
+    loadPaymentMethods: function loadPaymentMethods() {
+      axios.get('/api/v1/user/payment-methods').then(function (response) {
+        this.paymentMethods = response.data;
+      }.bind(this));
     }
   }
 });
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../../node_modules/process/browser.js */ "./node_modules/process/browser.js")))
 
 /***/ }),
 
@@ -19762,7 +19827,7 @@ var render = function() {
                               : "",
                           on: {
                             click: function($event) {
-                              _vm.paymentType = "subscription"
+                              _vm.paymentType = "oncesubscription"
                               _vm.paymentTypeStatus = true
                             }
                           }
@@ -19814,7 +19879,13 @@ var render = function() {
                   {
                     staticClass:
                       "w-full p-6 transition-all duration-150 ease-in-out",
-                    attrs: { method: "POST", action: "" }
+                    attrs: { method: "POST", action: "" },
+                    on: {
+                      submit: function($event) {
+                        $event.preventDefault()
+                        return _vm.submitPaymentMethod()
+                      }
+                    }
                   },
                   [
                     _c("div", { staticClass: "flex flex-col " }, [
@@ -19823,99 +19894,119 @@ var render = function() {
                         domProps: { value: _vm.paymentType }
                       }),
                       _vm._v(" "),
-                      _c("div", { staticClass: "flex items-center mn-6" }, [
-                        _c(
-                          "svg",
-                          {
-                            staticClass: "h-6 w-6 text-blue-800 mr-3",
-                            attrs: {
-                              fill: "currentColor",
-                              xmlns: "http://www.w3.org/2000/svg",
-                              viewBox: "0 0 20 20"
-                            },
-                            on: {
-                              click: function($event) {
-                                _vm.paymentType = ""
-                                _vm.paymentTypeStatus = false
-                              }
-                            }
-                          },
-                          [
-                            _c("polygon", {
-                              attrs: {
-                                points:
-                                  "3.828 9 9.899 2.929 8.485 1.515 0 10 .707 10.707 8.485 18.485 9.899 17.071 3.828 11 20 11 20 9 3.828 9"
-                              }
-                            })
-                          ]
-                        ),
-                        _vm._v(" "),
-                        _c(
-                          "p",
-                          { staticClass: "text-gray-800 font-medium py-3" },
-                          [_vm._v("Customer information")]
-                        )
-                      ]),
-                      _vm._v(" "),
-                      _vm._m(0),
-                      _vm._v(" "),
-                      _vm._m(1),
-                      _vm._v(" "),
-                      _c("div", { staticClass: "flex flex-wrap w-full mb-6" }, [
-                        _c(
-                          "div",
-                          { staticClass: "w-full md:w-1/3 px-3 mb-6 md:mb-0" },
-                          [
+                      _vm.paymentType == "once"
+                        ? _c("div", [
                             _c(
-                              "label",
-                              {
-                                staticClass:
-                                  "block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2",
-                                attrs: { for: "grid-city" }
-                              },
+                              "div",
+                              { staticClass: "flex items-center mn-6" },
                               [
-                                _vm._v(
-                                  "\n\t\t\t                        City\n\t\t\t                      "
+                                _c(
+                                  "svg",
+                                  {
+                                    staticClass: "h-6 w-6 text-blue-800 mr-3",
+                                    attrs: {
+                                      fill: "currentColor",
+                                      xmlns: "http://www.w3.org/2000/svg",
+                                      viewBox: "0 0 20 20"
+                                    },
+                                    on: {
+                                      click: function($event) {
+                                        _vm.paymentType = ""
+                                        _vm.paymentTypeStatus = false
+                                      }
+                                    }
+                                  },
+                                  [
+                                    _c("polygon", {
+                                      attrs: {
+                                        points:
+                                          "3.828 9 9.899 2.929 8.485 1.515 0 10 .707 10.707 8.485 18.485 9.899 17.071 3.828 11 20 11 20 9 3.828 9"
+                                      }
+                                    })
+                                  ]
+                                ),
+                                _vm._v(" "),
+                                _c(
+                                  "p",
+                                  {
+                                    staticClass:
+                                      "text-gray-800 font-medium py-3"
+                                  },
+                                  [_vm._v("Customer information")]
                                 )
                               ]
                             ),
                             _vm._v(" "),
-                            _c("div", { staticClass: "relative" }, [
-                              _vm._m(2),
-                              _vm._v(" "),
-                              _c(
-                                "div",
-                                {
-                                  staticClass:
-                                    "pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"
-                                },
-                                [
-                                  _c(
-                                    "svg",
-                                    {
-                                      staticClass: "fill-current h-4 w-4",
-                                      attrs: {
-                                        xmlns: "http://www.w3.org/2000/svg",
-                                        viewBox: "0 0 20 20"
-                                      }
-                                    },
-                                    [
-                                      _c("path", {
-                                        attrs: {
-                                          d:
-                                            "M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"
-                                        }
-                                      })
-                                    ]
-                                  )
-                                ]
-                              )
-                            ])
-                          ]
-                        ),
-                        _vm._v(" "),
-                        _vm._m(3)
-                      ]),
+                            _vm._m(0),
+                            _vm._v(" "),
+                            _vm._m(1),
+                            _vm._v(" "),
+                            _c(
+                              "div",
+                              { staticClass: "flex flex-wrap w-full mb-6" },
+                              [
+                                _c(
+                                  "div",
+                                  {
+                                    staticClass:
+                                      "w-full md:w-1/3 px-3 mb-6 md:mb-0"
+                                  },
+                                  [
+                                    _c(
+                                      "label",
+                                      {
+                                        staticClass:
+                                          "block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2",
+                                        attrs: { for: "grid-city" }
+                                      },
+                                      [
+                                        _vm._v(
+                                          "\n\t\t\t                        City\n\t\t\t                      "
+                                        )
+                                      ]
+                                    ),
+                                    _vm._v(" "),
+                                    _c("div", { staticClass: "relative" }, [
+                                      _vm._m(2),
+                                      _vm._v(" "),
+                                      _c(
+                                        "div",
+                                        {
+                                          staticClass:
+                                            "pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"
+                                        },
+                                        [
+                                          _c(
+                                            "svg",
+                                            {
+                                              staticClass:
+                                                "fill-current h-4 w-4",
+                                              attrs: {
+                                                xmlns:
+                                                  "http://www.w3.org/2000/svg",
+                                                viewBox: "0 0 20 20"
+                                              }
+                                            },
+                                            [
+                                              _c("path", {
+                                                attrs: {
+                                                  d:
+                                                    "M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"
+                                                }
+                                              })
+                                            ]
+                                          )
+                                        ]
+                                      )
+                                    ])
+                                  ]
+                                ),
+                                _vm._v(" "),
+                                _vm._m(3)
+                              ]
+                            )
+                          ])
+                        : _vm._e(),
                       _vm._v(" "),
                       _c(
                         "p",
@@ -19927,7 +20018,7 @@ var render = function() {
                         "div",
                         {
                           staticClass:
-                            "flex items-center justify-between flex-wrap"
+                            "flex items-center justify-around flex-wrap"
                         },
                         [
                           _vm.paymentType == "once"
@@ -20144,6 +20235,7 @@ var render = function() {
                               on: {
                                 click: function($event) {
                                   _vm.paymentMethod = "stripe"
+                                  _vm.loadIntent()
                                 }
                               }
                             },
@@ -20202,7 +20294,53 @@ var render = function() {
                           )
                         ]
                       )
-                    ])
+                    ]),
+                    _vm._v(" "),
+                    _vm.paymentMethod == "stripe"
+                      ? _c("div", { staticClass: "my-6" }, [
+                          _c("div", { staticClass: "flex flex-col mb-3" }, [
+                            _c("label", [_vm._v("Card Holder Name")]),
+                            _vm._v(" "),
+                            _c("input", {
+                              directives: [
+                                {
+                                  name: "model",
+                                  rawName: "v-model",
+                                  value: _vm.name,
+                                  expression: "name"
+                                }
+                              ],
+                              staticClass: "px-3 py-3 rounded-lg mb-2 w-full",
+                              attrs: { id: "card-holder-name", type: "text" },
+                              domProps: { value: _vm.name },
+                              on: {
+                                input: function($event) {
+                                  if ($event.target.composing) {
+                                    return
+                                  }
+                                  _vm.name = $event.target.value
+                                }
+                              }
+                            })
+                          ]),
+                          _vm._v(" "),
+                          _vm._m(4)
+                        ])
+                      : _vm._e(),
+                    _vm._v(" "),
+                    _c(
+                      "button",
+                      {
+                        staticClass:
+                          " my-3 bg-gray-800 hover:bg-gray-700 text-gray-100 font-bold py-3 px-4 rounded focus:outline-none focus:shadow-outline",
+                        attrs: { type: "submit" }
+                      },
+                      [
+                        _vm._v(
+                          "\n                                Subscribe\n                        "
+                        )
+                      ]
+                    )
                   ]
                 )
           ]
@@ -20312,6 +20450,16 @@ var staticRenderFns = [
           }
         })
       ])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "flex flex-col " }, [
+      _c("label", [_vm._v("Card")]),
+      _vm._v(" "),
+      _c("div", { attrs: { id: "card-element" } })
     ])
   }
 ]

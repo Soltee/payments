@@ -18,6 +18,6 @@ class WelcomeController extends Controller
     }
 
     public function auth(){
-    	return response()->json(['auth' => auth()->user()]);
+        return $request->user()->createSetupIntent();
     }
 }
